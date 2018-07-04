@@ -1,6 +1,6 @@
 // @flow
 
-import App from 'components/App';
+import SearchBar from 'components/SearchBar';
 import { connect } from 'react-redux';
 
 import type { State } from 'types';
@@ -9,9 +9,9 @@ const mapStateToProps = (state: State) => ({});
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({});
 
-const ContainedApp = connect(
+const ContainedSearchBar = connect(
   mapStateToProps,
   mapDispatchToProps,
-)(App);
+)(SearchBar)
 
-export default ContainedApp;
+export default ContainedSearchBar;

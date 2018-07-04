@@ -11,19 +11,22 @@
  */
 
 import { fromJS } from 'immutable';
+import * as types from 'constants/actionTypes';
 
 // The initial state of the App
 const initialState = fromJS({
   loading: false,
   error: false,
-  currentUser: false,
-  userData: {
-    repositories: false,
-  },
+  searchTerm: ''
 });
 
 function appReducer(state = initialState, action) {
   switch (action.type) {
+    case types.TRIGGER_SEARCH:
+      return {
+        ...state,
+        searchTerm: token
+      }
     default:
       return state;
   }
