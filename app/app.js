@@ -1,10 +1,3 @@
-/**
- * app.js
- *
- * This is the entry file for the application, only setup and boilerplate
- * code.
- */
-
 // Needed for redux-saga es6 generator support
 import 'babel-polyfill';
 
@@ -12,49 +5,69 @@ import 'babel-polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { ConnectedRouter } from 'react-router-redux';
-import FontFaceObserver from 'fontfaceobserver';
+import { ConnectedRouter, routerReducer, routerMiddleware } from 'react-router-redux';
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
+
 import createHistory from 'history/createBrowserHistory';
 import 'sanitize.css/sanitize.css';
 
 // Import root app
 import App from 'components/App';
+import reducers from 'reducers';
+import makeRootReducer from 'reducers/root';
 
 // Load the favicon
 /* eslint-disable import/no-webpack-loader-syntax */
 import '!file-loader?name=[name].[ext]!./images/favicon.ico';
 /* eslint-enable import/no-webpack-loader-syntax */
-
 // Import CSS reset and Global Styles
 import 'styles/theme.scss';
 
-import configureStore from './configureStore';
+import createSagaMiddleware from 'redux-saga';
+// import rootSaga from 'sagas';
 
-// Observe loading of Open Sans (to remove open sans, remove the <link> tag in
-// the index.html file and this observer)
-const openSansObserver = new FontFaceObserver('Open Sans', {});
+// If Redux DevTools Extension is installed use it, otherwise use Redux compose
+/* eslint-disable no-underscore-dangle */
+const composeEnhancers =
+  process.env.NODE_ENV !== 'production' &&
+  typeof window === 'object' &&
+  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({
+      // TODO Try to remove when `react-router-redux` is out of beta, LOCATION_CHANGE should not be fired more than once after hot reloading
+      // Prevent recomputing reducers for `replaceReducer`
+      shouldHotReload: false,
+    })
+    : compose;
+/* eslint-enable */
 
-// When Open Sans is loaded, add a font-family using Open Sans to the body
-openSansObserver.load().then(() => {
-  document.body.classList.add('fontLoaded');
-}, () => {
-  document.body.classList.remove('fontLoaded');
+const sagaMiddleware = createSagaMiddleware();
+
+const appReducer = combineReducers({
+  ...reducers,
+  router: routerReducer,
 });
 
-// Create redux store with history
-const initialState = {};
 const history = createHistory();
-const store = configureStore(initialState, history);
+const middleware = [sagaMiddleware, routerMiddleware(history)];
+
+const store = createStore(
+  makeRootReducer(appReducer),
+  composeEnhancers(
+    applyMiddleware(...middleware),
+  ),
+);
+
+// run saga
+// sagaMiddleware.run(rootSaga);
+
 const MOUNT_NODE = document.getElementById('app');
 
 const render = () => {
   ReactDOM.render(
     <Provider store={store}>
-      {/* <LanguageProvider messages={messages}> */}
       <ConnectedRouter history={history}>
         <App />
       </ConnectedRouter>
-      {/* </LanguageProvider> */}
     </Provider>,
     MOUNT_NODE
   );
@@ -68,6 +81,10 @@ if (module.hot) {
     ReactDOM.unmountComponentAtNode(MOUNT_NODE);
     render();
   });
+
+  // module.hot.accept('./reducers', () => {
+  //   store.replaceReducer(createReducer(store.injectedReducers));
+  // });
 }
 
 render();
